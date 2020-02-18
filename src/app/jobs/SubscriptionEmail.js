@@ -2,6 +2,9 @@ import Mail from "../tasks/Mail";
 
 export default {
   key: "SubscriptionEmail",
+  options: {
+  delay: 1000,
+  },
   async handle({ data }) {
     //   return subscriber from data
     const { subscriber } = data;
