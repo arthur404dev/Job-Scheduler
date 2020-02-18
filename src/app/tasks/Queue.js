@@ -1,8 +1,29 @@
 import Queue from "bull";
 import redisConfig from "../../config/redis";
-// Import Jobs
-import SubscriptionEmail from "../jobs/SubscriptionEmail";
-// Create the Queue for the jobs
-const mailQueue = new Queue(SubscriptionEmail.key, redisConfig);
-// Export the Queues
-export default mailQueue;
+// Import All Jobs
+import * as jobs from "../jobs";
+// Transform jobs into queues
+const queues = Object.values(jobs).map(job => ({
+  bull: new Queue(job.key, redisConfig),
+  name: job.key,
+  handle: job.handle
+}));
+// Find the Queue needed and export it to Redis
+export default {
+  queues,
+  add(name, data) {
+    const queue = this.queues.find(queue => queue.name == name);
+    return queue.bull.add(data);
+  },
+  process() {
+    return this.queues.forEach(queue => {
+      // Passing the Handle for each queue
+      queue.bull.process(queue.handle);
+      // Creating the Error Handler for each Queue
+      queue.bull.on("failed", (job, err) => {
+        console.log("An Error Ocurred: ", queue.key, job.data);
+        console.log(err);
+      });
+    });
+  }
+};

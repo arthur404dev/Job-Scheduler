@@ -10,7 +10,7 @@ export default {
     };
 
     // Send confirmation e-mail to the subscriber
-    await Queue.add({ subscriber });
+    await Queue.add("SubscriptionEmail", { subscriber });
 
     return res.json(subscriber);
   }
